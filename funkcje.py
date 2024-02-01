@@ -18,8 +18,6 @@ def logowanie():
 
 # FUNKCJE #
 
-
-
 def dodaj_pracownika():
     imie = input('Wpisz imie pracownika: ')
     nazwisko = input('Wpisz nazwisko pracownika: ')
