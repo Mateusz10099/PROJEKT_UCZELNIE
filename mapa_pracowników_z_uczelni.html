@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_77cf28a36441941c42a6927516573fd6 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_77cf28a36441941c42a6927516573fd6" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_77cf28a36441941c42a6927516573fd6 = L.map(
+                "map_77cf28a36441941c42a6927516573fd6",
+                {
+                    center: [52.3, 21.0],
+                    crs: L.CRS.EPSG3857,
+                    zoom: 7,
+                    zoomControl: true,
+                    preferCanvas: false,
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_5a5b939b0e8d34ee9c66bd757610066a = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {"attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors", "detectRetina": false, "maxNativeZoom": 19, "maxZoom": 19, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            );
+        
+    
+            tile_layer_5a5b939b0e8d34ee9c66bd757610066a.addTo(map_77cf28a36441941c42a6927516573fd6);
+        
+    
+            var marker_37863e28485c9784f501fd4d7aa702f6 = L.marker(
+                [54.040092, 21.7713092],
+                {}
+            ).addTo(map_77cf28a36441941c42a6927516573fd6);
+        
+    
+        var popup_4b8ba748beed8f1ab988c3548a077d30 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_795d7f359b9945a689830b4e7a7a2400 = $(`<div id="html_795d7f359b9945a689830b4e7a7a2400" style="width: 100.0%; height: 100.0%;">dr. Karol Laska - Musztra</div>`)[0];
+                popup_4b8ba748beed8f1ab988c3548a077d30.setContent(html_795d7f359b9945a689830b4e7a7a2400);
+            
+        
+
+        marker_37863e28485c9784f501fd4d7aa702f6.bindPopup(popup_4b8ba748beed8f1ab988c3548a077d30)
+        ;
+
+        
+    
+    
+            var marker_348d20ebd8fac6fa77c8f25d7e0c06f4 = L.marker(
+                [53.4301818, 14.5509623],
+                {}
+            ).addTo(map_77cf28a36441941c42a6927516573fd6);
+        
+    
+        var popup_e55bf6485d86947776f15bc5d89f3ff5 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_0a01c55f4d68822e91618a9ae0d72076 = $(`<div id="html_0a01c55f4d68822e91618a9ae0d72076" style="width: 100.0%; height: 100.0%;">prof. Tytus Bomba - Sztuka wojenna</div>`)[0];
+                popup_e55bf6485d86947776f15bc5d89f3ff5.setContent(html_0a01c55f4d68822e91618a9ae0d72076);
+            
+        
+
+        marker_348d20ebd8fac6fa77c8f25d7e0c06f4.bindPopup(popup_e55bf6485d86947776f15bc5d89f3ff5)
+        ;
+
+        
+    
+    
+            var marker_e929e017fc27ff21a0da093474e9717c = L.marker(
+                [53.12974625, 18.029369658534854],
+                {}
+            ).addTo(map_77cf28a36441941c42a6927516573fd6);
+        
+    
+        var popup_28a4513b6f35caf2fcac859e4618848b = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_3a69014e4b85257946895093d6eb906b = $(`<div id="html_3a69014e4b85257946895093d6eb906b" style="width: 100.0%; height: 100.0%;">gen. Bronisław Kuj - Planowanie operacyjne</div>`)[0];
+                popup_28a4513b6f35caf2fcac859e4618848b.setContent(html_3a69014e4b85257946895093d6eb906b);
+            
+        
+
+        marker_e929e017fc27ff21a0da093474e9717c.bindPopup(popup_28a4513b6f35caf2fcac859e4618848b)
+        ;
+
+        
+    
+    
+            var marker_e9bc08973ae82190b7ef31d1551dbe50 = L.marker(
+                [52.4082663, 16.9335199],
+                {}
+            ).addTo(map_77cf28a36441941c42a6927516573fd6);
+        
+    
+        var popup_faa365332357f27344bfce1f5034458a = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_8d084b71c27edf8142b92a1cd5b2aa67 = $(`<div id="html_8d084b71c27edf8142b92a1cd5b2aa67" style="width: 100.0%; height: 100.0%;">dr mgr. inż. Cezary Baryka - j. Angielski</div>`)[0];
+                popup_faa365332357f27344bfce1f5034458a.setContent(html_8d084b71c27edf8142b92a1cd5b2aa67);
+            
+        
+
+        marker_e9bc08973ae82190b7ef31d1551dbe50.bindPopup(popup_faa365332357f27344bfce1f5034458a)
+        ;
+
+        
+    
+</script>
+</html>

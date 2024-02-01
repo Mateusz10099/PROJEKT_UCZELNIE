@@ -1,0 +1,3 @@
+from funkcje import *
+
+logowanie()

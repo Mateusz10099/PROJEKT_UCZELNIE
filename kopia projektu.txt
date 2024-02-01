@@ -1,0 +1,510 @@
+import psycopg2
+import sqlalchemy
+import geoalchemy2
+import getpass
+import geopy.geocoders
+from sqlalchemy import Sequence, create_engine, Column, Integer, String, ForeignKey, CheckConstraint
+import psycopg2
+import sqlalchemy
+import geoalchemy2
+import getpass
+import geopy.geocoders
+from sqlalchemy import Sequence, create_engine, Column, Integer, String, ForeignKey, CheckConstraint
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+from geoalchemy2 import Geometry
+from getpass import getpass
+from geopy.geocoders import Nominatim
+
+# POŁĄCZENIE Z SQL - PARAMETRY #
+db_params = sqlalchemy.URL.create(
+    drivername="postgresql+psycopg2",
+    database="postgres",
+    username= "postgres",
+    password= "Monika",
+    host= "localhost",
+    port= 5433)
+
+# ŁĄCZENIE Z SQL #
+engine = create_engine(db_params)
+Base = declarative_base()
+Session = sessionmaker(bind = engine)
+session = Session()
+
+# KLASY #
+class Uczelnia(Base):
+    __tablename__ = 'lista_uczelni'
+
+    id = Column(Integer(), Sequence('uczelnia_id_seq'), primary_key=True)
+    nazwa = Column(String(100), nullable=False)
+    miasto = Column(String(100), nullable=False)
+    wojewodztwo = Column(String(100), nullable=False)
+    powiat = Column(String(100), nullable=False)
+    id_uczelnia = Column(String(100), nullable=False)
+    lokalizacja = Column('geom', Geometry(geometry_type='POINT', srid=4326), nullable=False)
+
+    def __init__(self, nazwa, miasto, wojewodztwo, powiat, id_uczelnia):
+        self.nazwa = nazwa
+        self.miasto = miasto
+        self.wojewodztwo = wojewodztwo
+        self.powiat = powiat
+        self.id_uczelnia = id_uczelnia
+        cordy = wspolrzedne(miasto)
+        self.lokalizacja = f'POINT({cordy[1]} {cordy[0]})'
+
+class Pracownicy(Base):
+    __tablename__ = 'lista_pracownikow'
+
+    id = Column(Integer(), Sequence('uczelnia_id_seq'), primary_key=True)
+    imie = Column(String(100), nullable=False)
+    nazwisko = Column(String(100), nullable=False)
+    tytul = Column(String(100), nullable=False)
+    przedmiot = Column(String(100), nullable=False)
+    miasto = Column(String(100), nullable=False)
+    wojewodztwo = Column(String(100), nullable=False)
+    id_pracownik = Column(String(100), nullable=False)
+    lokalizacja = Column('geom', Geometry(geometry_type='POINT', srid=4326), nullable=False)
+
+    def __init__(self, imie, nazwisko, tytul, przedmiot, miasto, wojewodztwo, id_pracownik):
+        self.imie = imie
+        self.nazwisko = nazwisko
+        self.tytul = tytul
+        self.przedmiot = przedmiot
+        self.miasto = miasto
+        self.wojewodztwo = wojewodztwo
+        self.id_pracownik = id_pracownik
+        cordy = wspolrzedne(miasto)
+        self.lokalizacja = f'POINT({cordy[1]} {cordy[0]})'
+
+class Student(Base):
+    __tablename__ = 'lista_studentow'
+
+    id = Column(Integer(), Sequence('student_id_seq'), primary_key=True)
+    imie = Column(String(100), nullable=False)
+    nazwisko = Column(String(100), nullable=False)
+    wiek = Column(Integer(), nullable=False)
+    rok = Column(Integer(), nullable=False)
+    kierunek = Column(String(100), nullable=False)
+    akademik = Column(String(100), nullable=False)
+    miasto = Column(String(100), nullable=False)
+    id_student = Column(String(100), nullable=False)
+    lokalizacja = Column('geom', Geometry(geometry_type='POINT', srid=4326), nullable=False)
+
+    def __init__(self, imie, nazwisko, wiek, rok, kierunek, akademik, miasto, id_student):
+        self.imie = imie
+        self.nazwisko = nazwisko
+        self.wiek = wiek
+        self.rok = rok
+        self.kierunek = kierunek
+        self.akademik = akademik
+        self.miasto = miasto
+        self.id_student = id_student
+        cordy = wspolrzedne(miasto)
+        self.lokalizacja = f'POINT({cordy[1]} {cordy[0]})'
+
+Base.metadata.create_all(engine)
+
+# LOGOWANIE #
+
+def login_to_sys():
+    while True:
+        login = input('Login: ')
+        hasło = input('Hasło: ')
+        if ((login == 'Mateusz')
+            and (hasło == '123')):
+            GUI()
+            break
+        else:
+            print('Nieprawidłowy login lub hasło')
+            print('Spróbuj jeszcze raz')
+
+# FUNKCJE #
+
+def wspolrzedne (address):
+    geolocator = Nominatim(user_agent='my_geocoder')
+    location = geolocator.geocode(address)
+
+    latitude, longitude = location.latitude, location.longitude
+    return latitude, longitude
+
+def dodaj_pracownika():
+    imie = input('Wpisz imie pracownika: ')
+    nazwisko = input('Wpisz nazwisko pracownika: ')
+    tytul = input('Podaj tytuł naukowy pracownika: ')
+    przedmiot = input('Wpisz przedmiot, który prowadzi pracownik: ')
+    miasto = input('Podaj miasto pracownika: ')
+    wojewodztwo = input('Podaj województwo pracownika: ')
+    id_pracownik = input('Wpisz numer uczelni w jakiej pracuje: ')
+
+    add=Pracownicy(imie, nazwisko, tytul, przedmiot, miasto, wojewodztwo, id_pracownik)
+    session.add(add)
+    session.commit()
+def wyswietl_pracownikow():
+    wszyscy_pracownicy = session.query(Pracownicy).all()
+    if wszyscy_pracownicy == []:
+        print('Nie ma jeszcze żadnych dodanych pracowników')
+    else:
+        for id, pracownik in enumerate(wszyscy_pracownicy):
+            print(f"{id+1}. Pracownik {pracownik.tytul}. {pracownik.imie} {pracownik.nazwisko}, uczy przedmiotu {pracownik.przedmiot}. Jest z miasta {pracownik.miasto}. Pracuje w uczelni o numerze {pracownik.id_pracownik}")
+def usun_pracownika():
+    do_usuniecia = input('Podaj nazwisko pracownika/ów do usunięcia: ')
+    wszyscy_pracownicy = session.query(Pracownicy).filter(Pracownicy.nazwisko==do_usuniecia)
+
+    lista = []
+    for pracownik in wszyscy_pracownicy:
+        if pracownik.nazwisko == do_usuniecia:
+            lista.append(pracownik)
+        print('Odnalezieni pracownicy: ')
+        print('0 - Usuń wszystkich pracowników: ')
+
+    for id, pracownik in enumerate(lista):
+        print(f"{id+1}. Pracownik {pracownik.tytul}. {pracownik.imie} {pracownik.nazwisko}, uczy przedmiotu {pracownik.przedmiot}. Jest z miasta {pracownik.miasto}. Pracuje w uczelni o numerze {pracownik.id_pracownik}")
+    aaa = int(input('Wybierz pracownika do usunięcia: '))
+    if aaa == 0:
+        for pracownik in lista:
+            session.delete(pracownik)
+    else:
+        bbb = lista[aaa-1]
+        session.delete(bbb)
+
+    session.commit()
+def aktualizacja_pracownikow():
+    aktualizacja = input('Podaj nazwisko pracownika do zmiany danych: ')
+    wszyscy_pracownicy = session.query(Pracownicy).filter(Pracownicy.nazwisko == aktualizacja).all()
+
+    if wszyscy_pracownicy == []:
+        print('Nie ma takiego pracownika')
+    else:
+        for pracownik in wszyscy_pracownicy:
+            pracownik.imie = input('Wpisz imie pracownika: ')
+            pracownik.nazwisko = input('Wpisz nazwisko pracownika: ')
+            pracownik.tytul = input('Podaj tytuł naukowy pracownika: ')
+            pracownik.przedmiot = input('Wpisz przedmiot, który prowadzi pracownik: ')
+            pracownik.miasto = input('Podaj miasto pracownika: ')
+            pracownik.wojewodztwo = input('Podaj województwo pracownika: ')
+            pracownik.id_pracownik = input('Wpisz numer uczelni w jakiej pracuje: ')
+            pracownik.lokalizacja = f"POINT({wspolrzedne(pracownik.miasto)[1]} {wspolrzedne(pracownik.miasto)[0]})"
+
+    session.commit()
+def dodaj_uczelnie():
+    nazwa = input('Wpisz nazwę uczelni: ')
+    miasto = input('Wpisz miasto, gdzie znajduje się uczelnia: ')
+    wojewodztwo = input('Wpisz województwo, gdzie znajduje się uczelnia: ')
+    powiat = input('Wpisz powat, gdzie znajduje się uczelnia: ')
+    id_uczelnia = input('Podaj numer uczelni: ')
+
+    add=Uczelnia(nazwa, miasto, wojewodztwo, powiat, id_uczelnia)
+    session.add(add)
+    session.commit()
+def wyswietl_uczelnie():
+    wszystkie_uczelnie = session.query(Uczelnia).all()
+    if wszystkie_uczelnie == []:
+        print('Nie ma jeszcze wprowadzonych uczelni')
+    else:
+        for id, uczelnia in enumerate(wszystkie_uczelnie):
+            print(f"{id + 1}. {uczelnia.nazwa}, miasto - {uczelnia.miasto} w województwie {uczelnia.wojewodztwo}, powiat - {uczelnia.powiat}. Uczelnia o numerze {uczelnia.id_uczelnia}")
+def usun_uczelnie():
+    do_usuniecia = input('Podaj nazwę uczelni do usunięcia: ')
+    wszystkie_uczelnie = session.query(Uczelnia).filter(Uczelnia.nazwa == do_usuniecia)
+
+    lista = []
+    for uczelnia in wszystkie_uczelnie:
+        if uczelnia.nazwa == do_usuniecia:
+            lista.append(uczelnia)
+        print('Odnalezione Uczelnie: ')
+        print('0 - Usuń wszystkie uczelnie: ')
+
+    for id, uczelnia in enumerate(lista):
+        print(f"{id + 1}. {uczelnia.nazwa}, miasto - {uczelnia.miasto} w województwie {uczelnia.wojewodztwo}, powiat - {uczelnia.powiat}. Uczelnia o numerze {uczelnia.id_uczelnia}")
+    aaa = int(input('Wybierz uczelnie do usunięcia: '))
+    if aaa == 0:
+        for uczelnia in lista:
+            session.delete(uczelnia)
+    else:
+        bbb = lista[aaa - 1]
+        session.delete(bbb)
+
+    session.commit()
+def aktualizacja_uczelni():
+    aktualizacja = input('Podaj nazwę uczelni do zmiany danych: ')
+    wszystkie_uczelnie = session.query(Uczelnia).filter(Uczelnia.nazwa == aktualizacja).all()
+
+    if wszystkie_uczelnie == []:
+        print('Nie ma takiej uczelni')
+    else:
+        for uczelnia in wszystkie_uczelnie:
+            uczelnia.nazwa = input('Wpisz nazwę uczelni: ')
+            uczelnia.miasto = input('Wpisz miasto, gdzie znajduje się uczelnia: ')
+            uczelnia.wojewodztwo = input('Wpisz województwo, gdzie znajduje się uczelnia: ')
+            uczelnia.powiat = input('Wpisz powat, gdzie znajduje się uczelnia: ')
+            uczelnia.id_uczelnia = input('Podaj numer uczelni: ')
+            uczelnia.lokalizacja = f"POINT({wspolrzedne(uczelnia.miasto)[1]} {wspolrzedne(uczelnia.miasto)[0]})"
+
+    session.commit()
+def dodaj_studenta():
+    imie = input('Wpisz imie studenta: ')
+    nazwisko = input('Wpisz nazwisko studenta: ')
+    while True:
+        try:
+            wiek = int(input('Podaj wiek studenta (1-99): '))
+            if 1 <= wiek <= 99:
+                break
+            else:
+                print("Wiek musi być liczbą całkowitą z zakresu 1-99.")
+        except ValueError:
+            print("Wprowadź poprawną liczbę całkowitą.")
+    while True:
+        try:
+            rok = int(input('Podaj rok studenta (1-5): '))
+            if 1 <= rok <= 5:
+                break
+            else:
+                print("Rok musi być liczbą całkowitą z zakresu 1-5.")
+        except ValueError:
+            print("Wprowadź poprawną liczbę całkowitą.")
+    kierunek = input('Podaj kierunek na jakim studiuje: ')
+    akademik = input('Podaj akademik w którym mieszka: ')
+    miasto = input('Podaj miasto z którego jest: ')
+    id_student = input('Wpisz numer uczelni do jakiej uczęszcza: ')
+
+    add = Student(imie, nazwisko, wiek, rok, kierunek, akademik, miasto, id_student)
+    session.add(add)
+    session.commit()
+def wyswietl_studentow():
+    wszyscy_studenci = session.query(Student).all()
+    if wszyscy_studenci == []:
+        print('Nie ma jeszcze wprowadzonych studentów')
+    else:
+        for id, student in enumerate(wszyscy_studenci):
+            print(f"{id + 1}. Student {student.imie} {student.nazwisko}, {student.wiek} lat. Studiuje na uczelni o numerze {student.id_student}. {student.rok} rok na kierunku {student.kierunek}. Zakwaterowany w {student.akademik}. Jest z miasta {student.miasto}.")
+def usun_studenta():
+    do_usuniecia = input('Podaj nazwisko studenta do usunięcia: ')
+    wszyscy_studenci = session.query(Student).filter(Student.nazwisko == do_usuniecia)
+
+    lista = []
+    for student in wszyscy_studenci:
+        if student.nazwisko == do_usuniecia:
+            lista.append(student)
+        print('Odnalezieni studenci: ')
+        print('0 - Usuń wszystkich studentów: ')
+
+    for id, student in enumerate(lista):
+        print(f"{id + 1}. Student {student.imie} {student.nazwisko}, {student.wiek} lat. Studiuje na uczelni o numerze {student.id_student}. {student.rok} rok na kierunku {student.kierunek}. Zakwaterowany w {student.akademik}. Jest z miasta {student.miasto}.")
+    aaa = int(input('Wybierz studenta do usunięcia: '))
+    if aaa == 0:
+        for student in lista:
+            session.delete(student)
+    else:
+        bbb = lista[aaa - 1]
+        session.delete(bbb)
+
+    session.commit()
+def aktualizacja_studentow():
+    aktualizacja = input('Podaj nazwisko studenta do zmiany danych: ')
+    wszyscy_studenci = session.query(Student).filter(Student.nazwisko == aktualizacja).all()
+
+    if wszyscy_studenci == []:
+        print('Nie ma takiego studenta')
+    else:
+        for student in wszyscy_studenci:
+            student.imie = input('Wpisz imie studenta: ')
+            student.nazwisko = input('Wpisz nazwisko studenta: ')
+            while True:
+                try:
+                    student.wiek = int(input('Podaj wiek studenta (1-99): '))
+                    if 1 <= student.wiek <= 99:
+                        break
+                    else:
+                        print("Wiek musi być liczbą całkowitą z zakresu 1-99.")
+                except ValueError:
+                    print("Wprowadź poprawną liczbę całkowitą.")
+            while True:
+                try:
+                    student.rok = int(input('Podaj rok studenta (1-5): '))
+                    if 1 <= student.rok <= 5:
+                        break
+                    else:
+                        print("Rok musi być liczbą całkowitą z zakresu 1-5.")
+                except ValueError:
+                    print("Wprowadź poprawną liczbę całkowitą.")
+            student.kierunek = input('Podaj kierunek na jakim studiuje: ')
+            student.akademik = input('Podaj akademik w którym mieszka: ')
+            student.miasto = input('Podaj miasto z którego jest: ')
+            student.id_student = input('Wpisz numer uczelni do jakiej uczęszcza: ')
+
+    session.commit()
+def pracownicy_w_powiecie(session):
+    powiaty = (
+        session.query(Uczelnia.powiat)
+        .distinct()
+        .order_by(Uczelnia.powiat)
+        .all())
+    if not powiaty:
+        print('Brak danych o powiatach.')
+        return
+    print('Dostępne powiaty:')
+    for powiat in powiaty:
+        print(powiat[0])
+    wybrany_powiat = input('Podaj nazwę powiatu, dla którego chcesz wyświetlić pracowników: ')
+
+    pracownicy = (
+        session.query(Pracownicy)
+        .join(Uczelnia, Pracownicy.id_pracownik == Uczelnia.id_uczelnia)
+        .filter(Uczelnia.powiat == wybrany_powiat)
+        .all())
+    if not pracownicy:
+        print(f'Brak pracowników w powiecie {wybrany_powiat}')
+    else:
+        print(f'Pracownicy w powiecie {wybrany_powiat}:')
+        for idx, pracownik in enumerate(pracownicy, start=1):
+            print(f"{idx+1}. Pracownik {pracownik.tytul}. {pracownik.imie} {pracownik.nazwisko}, uczy przedmiotu {pracownik.przedmiot}. Jest z miasta {pracownik.miasto}. Pracuje w uczelni o numerze {pracownik.id_pracownik}")
+def usun_pracownikow_z_powiatu(session):
+    powiaty = session.query(Uczelnia.powiat).distinct().all()
+    print("Dostępne powiaty:")
+    for idx, powiat in enumerate(powiaty):
+        print(f"{idx + 1}. {powiat[0]}")
+    wybrany_powiat = input("Podaj nazwę powiatu, z którego chcesz usunąć pracowników: ")
+
+    pracownicy_do_usuniecia = (
+        session.query(Pracownicy)
+        .join(Uczelnia, Pracownicy.id_pracownik == Uczelnia.id_uczelnia)
+        .filter(Uczelnia.powiat == wybrany_powiat)
+        .all())
+    for pracownik in pracownicy_do_usuniecia:
+        session.delete(pracownik)
+
+    session.commit()
+    print(f"Usunięto pracowników z powiatu {wybrany_powiat}")
+def aktualizuj_dane_pracownika_z_powiatu(session):
+    powiaty = session.query(Uczelnia.powiat).distinct().all()
+    print("Dostępne powiaty:")
+    for idx, powiat in enumerate(powiaty):
+        print(f"{idx + 1}. {powiat[0]}")
+    wybrany_powiat = input("Podaj nazwę powiatu, z którego chcesz usunąć pracowników: ")
+
+    pracownicy_do_aktualizacji = (
+        session.query(Pracownicy)
+        .join(Uczelnia, Pracownicy.id_pracownik == Uczelnia.id_uczelnia)
+        .filter(Uczelnia.powiat == wybrany_powiat)
+        .all())
+
+    if not pracownicy_do_aktualizacji:
+        print(f"Brak pracowników w powiecie {wybrany_powiat}")
+        return
+    print("Pracownicy w wybranym powiecie:")
+    for idx, pracownik in enumerate(pracownicy_do_aktualizacji, start=1):
+        print(f"{idx+1}. Pracownik {pracownik.tytul}. {pracownik.imie} {pracownik.nazwisko}, uczy przedmiotu {pracownik.przedmiot}. Jest z miasta {pracownik.miasto}. Pracuje w uczelni o numerze {pracownik.id_pracownik}")
+
+    index_pracownika = int(input("Wybierz numer pracownika do aktualizacji: ")) - 1
+    if 0 <= index_pracownika < len(pracownicy_do_aktualizacji):
+        wybrany_pracownik = pracownicy_do_aktualizacji[index_pracownika]
+
+        wybrany_pracownik.imie = input("Nowe imię: ")
+        wybrany_pracownik.nazwisko = input("Nowe nazwisko: ")
+        wybrany_pracownik.tytul = input("Nowy tytuł: ")
+        wybrany_pracownik.przedmiot = input("Nowy przedmiot: ")
+        wybrany_pracownik.miasto = input("Nowe miasto: ")
+        wybrany_pracownik.wojewodztwo = input("Nowe województwo: ")
+
+        session.commit()
+        print(f"Dane pracownika z powiatu {wybrany_powiat} zostały zaktualizowane.")
+    else:
+        print("Nieprawidłowy numer pracownika.")
+def uczelnie_w_wojewodztwie(session):
+    wojewodztwa = session.query(Uczelnia.wojewodztwo).distinct().all()
+    dostepne_wojewodztwa = [woj[0] for woj in wojewodztwa]
+
+    print("Dostępne województwa:")
+    for i, wojewodztwo in enumerate(dostepne_wojewodztwa, start=1):
+        print(f"{i}. {wojewodztwo}")
+    wybrane_wojewodztwo = input("Podaj nazwę województwa: ")
+    uczelnie_w_wojewodztwie = (
+        session.query(Uczelnia)
+        .filter(Uczelnia.wojewodztwo == wybrane_wojewodztwo)
+        .all())
+
+    if not uczelnie_w_wojewodztwie:
+        print(f"Brak uczelni w województwie {wybrane_wojewodztwo}")
+        return
+    print(f"Uczelnie w województwie {wybrane_wojewodztwo}:")
+    for idx, uczelnia in enumerate(uczelnie_w_wojewodztwie, start=1):
+        print(f"{idx + 1}. {uczelnia.nazwa}, miasto - {uczelnia.miasto} w województwie {uczelnia.wojewodztwo}, powiat - {uczelnia.powiat}.Uczelnia o numerze {uczelnia.id_uczelnia}")
+
+
+def GUI():
+    while True:
+        print('\nSystem zarządzania uczelniami w mieście i studentami\n'
+              f'0 - Wyłącz program\n'
+              f'1 - Dodaj pracownika\n'
+              f'2 - Wyświetl wszystkich pracowników\n'
+              f'3 - Usuń pracownika\n'
+              f'4 - Aktualizuj informacje o pracowniku\n'
+              f'5 - Dodaj uczelnie\n'
+              f'6 - Wyświetl wszystkie uczelnie\n'
+              f'7 - Usuń uczelnie\n'
+              f'8 - Aktualizuj informacje o uczelni\n'
+              f'9 - Dodaj studenta\n'
+              f'10 - Wyświetl wszystkich studentów\n'
+              f'11 - Usuń studenta\n'
+              f'12 - Aktualizuj informacje o studencie\n'
+              f'13 - Wyświetl pracowników z wszystkich uczelni w danym powiecie\n'
+              f'14 - Usuń pracowników z wszystkich uczelni w danym powiecie\n'
+              f'15 - Aktualizuj pracowników z wybranego powiatu\n'
+              f'16 - Wyświetl uczelnie w danym województwie\n')
+
+        option = int(input('Wybierz czynność: '))
+        print(f'Funkcja - {option}\n')
+
+        match option:
+            case 0:
+                print('Kończę pracę')
+                break
+            case 1:
+                print('Dodajesz nowego pracownika')
+                dodaj_pracownika()
+            case 2:
+                print('Wyświetlam listę wszystkich pracowników')
+                wyswietl_pracownikow()
+            case 3:
+                print('Usuwanie pracownika')
+                usun_pracownika()
+            case 4:
+                print('Aktualizacja informacji o pracowniku')
+                aktualizacja_pracownikow()
+            case 5:
+                print('Dodawanie uczelni')
+                dodaj_uczelnie()
+            case 6:
+                print('Wyświetlam listę wszystkich uczelni')
+                wyswietl_uczelnie()
+            case 7:
+                print('Usuwanie uczelni')
+                usun_uczelnie()
+            case 8:
+                print('Aktualizacja informacji o uczelni')
+                aktualizacja_uczelni()
+            case 9:
+                print('Dodajesz nowego studenta')
+                dodaj_studenta()
+            case 10:
+                print('Wyświetlam listę wszystkich studentów')
+                wyswietl_studentow()
+            case 11:
+                print('Usuwanie studentów')
+                usun_studenta()
+            case 12:
+                print('Aktualizacja informacji o studencie')
+                aktualizacja_studentow()
+            case 13:
+                print('Wyświetlam listę pracowników z wszystkich uczelni w wybranym powiecie')
+                pracownicy_w_powiecie(session)
+            case 14:
+                print('Usuwanie pracowników z wszystkich uczelni w danym powiecie ')
+                usun_pracownikow_z_powiatu(session)
+            case 15:
+                print('Aktualizacja pracowników z wybranego powatu')
+                aktualizuj_dane_pracownika_z_powiatu(session)
+            case 16:
+                print('Wyświetlam listę uczelni w danym województwie')
+                uczelnie_w_wojewodztwie(session)
+
+GUI()
